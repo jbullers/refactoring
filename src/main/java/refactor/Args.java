@@ -65,16 +65,8 @@ public class Args {
         return parsedArgs.size();
     }
 
-    public String getString(char arg) {
-        return (String) parsedArgs.getOrDefault(arg, "");
-    }
-
-    public int getInt(char arg) {
-        return (Integer) parsedArgs.getOrDefault(arg, 0);
-    }
-
-    public boolean getBoolean(char arg) {
-        return (Boolean) parsedArgs.getOrDefault(arg, false);
+    public <T> T get(char arg, Class<T> argType, T defaultValue) {
+        return argType.cast(parsedArgs.getOrDefault(arg, defaultValue));
     }
 
     public boolean has(char arg) {
