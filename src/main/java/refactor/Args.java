@@ -1,6 +1,5 @@
 package refactor;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -38,7 +37,7 @@ public class Args {
         // the parameters following. Examples:
         // -n 10 -b -s Foo
         // -nbs 10 Foo
-        for (var argsIter = new ArrayList<>(asList(args)).iterator(); argsIter.hasNext(); ) {
+        for (var argsIter = asList(args).iterator(); argsIter.hasNext(); ) {
             String arg = argsIter.next();
             if (arg.startsWith("-")) {
                 for (char argChar : arg.substring(1).toCharArray()) {
