@@ -1,11 +1,6 @@
 package refactor;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.*;
 
 import static java.lang.Integer.parseInt;
 import static java.util.Arrays.asList;
@@ -62,31 +57,33 @@ public class Args {
         return elementTail.equals("#");
     }
 
+    private record Arg(char argChar, String parameter) {}
+
     private void parseArguments(String[] args) throws ArgsException {
+        var argsList = argParameterPairsFrom(args);
+        for (Arg arg : argsList) {
+            parseArgument(arg);
+        }
+    }
+
+    private List<Arg> argParameterPairsFrom(String[] args) throws ArgsException {
+        // This is a bit hairy, but it covers extracting (argument, parameter) pairs in both the case where
+        // parameters follow the arg character and cases where the args characters appear grouped together with
+        // the parameters following. Examples:
+        // -n 10 -b -s Foo
+        // -nbs 10 Foo
+        var argsList = new ArrayList<Arg>();
         for (var argsIter = new ArrayList<>(asList(args)).iterator(); argsIter.hasNext(); ) {
             String arg = argsIter.next();
             if (arg.startsWith("-")) {
                 for (char argChar : arg.substring(1).toCharArray()) {
-                    if (booleanArgs.containsKey(argChar))
-                        booleanArgs.put(argChar, true);
-                    else if (stringArgs.containsKey(argChar)) {
+                    if (booleanArgs.containsKey(argChar)) {
+                        argsList.add(new Arg(argChar, ""));
+                    } else if (stringArgs.containsKey(argChar) || intArgs.containsKey(argChar)) {
                         try {
-                            stringArgs.put(argChar, argsIter.next());
+                            argsList.add(new Arg(argChar, argsIter.next()));
                         } catch (NoSuchElementException e) {
-                            throw new ArgsException("Could not find string parameter for -%c.".formatted(argChar), e);
-                        }
-                    } else if (intArgs.containsKey(argChar)) {
-                        String parameter;
-                        try {
-                            parameter = argsIter.next();
-                        } catch (NoSuchElementException e) {
-                            throw new ArgsException("Could not find integer parameter for -%c.".formatted(argChar), e);
-                        }
-
-                        try {
-                            intArgs.put(argChar, parseInt(parameter));
-                        } catch (NumberFormatException e) {
-                            throw new ArgsException("Argument -%c expects an integer but was '%s'.".formatted(argChar, parameter), e);
+                            throw new ArgsException("Could not find parameter for -%c.".formatted(argChar), e);
                         }
                     } else {
                         throw new ArgsException("Argument -%c unexpected".formatted(argChar));
@@ -94,6 +91,24 @@ public class Args {
 
                     argsFound.add(argChar);
                 }
+            }
+        }
+
+        return argsList;
+    }
+
+    private void parseArgument(Arg argument) throws ArgsException {
+        if (booleanArgs.containsKey(argument.argChar))
+            booleanArgs.put(argument.argChar, true);
+        else if (stringArgs.containsKey(argument.argChar)) {
+            stringArgs.put(argument.argChar, argument.parameter);
+        } else if (intArgs.containsKey(argument.argChar)) {
+            try {
+                intArgs.put(argument.argChar, parseInt(argument.parameter));
+            } catch (NumberFormatException e) {
+                throw new ArgsException(
+                        "Argument -%c expects an integer but was '%s'.".formatted(argument.argChar, argument.parameter),
+                        e);
             }
         }
     }
