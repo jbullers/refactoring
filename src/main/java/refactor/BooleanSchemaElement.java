@@ -1,8 +1,5 @@
 package refactor;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
-@ParametersAreNonnullByDefault
 final class BooleanSchemaElement extends SchemaElement {
 
     static final String TOKEN = "";

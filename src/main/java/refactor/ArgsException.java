@@ -1,8 +1,5 @@
 package refactor;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
-@ParametersAreNonnullByDefault
 public class ArgsException extends Exception {
 
     public ArgsException(String message) {

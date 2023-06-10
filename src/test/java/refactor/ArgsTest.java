@@ -9,7 +9,7 @@ public class ArgsTest {
 
     @Test
     public void shouldAllowForMultipleBooleanArgsWithASingleHyphen() throws Exception {
-        Args args = new Args("a,b,c", new String[]{"-ac"});
+        Args args = new Args("a,b,c", new String[] { "-ac" });
 
         assertThat(args.get('a', Boolean.class, false), is(true));
         assertThat(args.get('b', Boolean.class, false), is(false));
@@ -18,7 +18,7 @@ public class ArgsTest {
 
     @Test
     public void shouldAllowForMultipleArgCharactersWithASingleHyphen() throws Exception {
-        Args args = new Args("n#,b,s*", new String[]{"-nbs", "10", "Foo"});
+        Args args = new Args("n#,b,s*", new String[] { "-nbs", "10", "Foo" });
 
         assertThat(args.get('n', Integer.class, 0), is(10));
         assertThat(args.get('b', Boolean.class, false), is(true));
@@ -27,7 +27,7 @@ public class ArgsTest {
 
     @Test
     public void shouldAllowParseMultipleArgs() throws Exception {
-        Args args = new Args("n#,b,s*", new String[]{"-n", "10", "-b", "-s", "Foo"});
+        Args args = new Args("n#,b,s*", new String[] { "-n", "10", "-b", "-s", "Foo" });
 
         assertThat(args.get('n', Integer.class, 0), is(10));
         assertThat(args.get('b', Boolean.class, false), is(true));

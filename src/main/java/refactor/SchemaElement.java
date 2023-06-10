@@ -1,8 +1,5 @@
 package refactor;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
-@ParametersAreNonnullByDefault
 abstract class SchemaElement {
 
     private final char argCharacter;

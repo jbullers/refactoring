@@ -1,10 +1,7 @@
 package refactor;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
 import static java.lang.Integer.parseInt;
 
-@ParametersAreNonnullByDefault
 final class IntegerSchemaElement extends SchemaElement {
 
     static final String TOKEN = "#";
