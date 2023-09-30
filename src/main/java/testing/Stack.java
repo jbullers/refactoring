@@ -12,9 +12,9 @@ import static java.util.Objects.requireNonNull;
  * An immutable FIFO data structure.
  * <p>
  * Create a stack with {@code Stack.&lt;Type&gt;empty()} and add elements using {@link #push(E)}. The top of the stack
- * can be retrieved by calling {@link #peek()}, and the top-most element can be removed by calling {@link #pop()}.
- * Note that since this stack implementation is immutable, both {@code peek()} and {@code pop()} must be called to
- * remove and retain a reference to the top-most stack element.
+ * can be retrieved by calling {@link #peek()}, and the top-most element can be removed by calling {@link #pop()}. Note
+ * that since this stack implementation is immutable, both {@code peek()} and {@code pop()} must be called to remove and
+ * retain a reference to the top-most stack element.
  *
  * @param <E> the type of elements in this stack
  */
@@ -44,8 +44,9 @@ public class Stack<E> {
     @CheckReturnValue
     public Stack<E> push(@Nonnull E element) {
         var stack = new Stack<E>();
-        stack.elements = new ArrayList<>(this.elements);
-        stack.elements.add(requireNonNull(element, "Attempted to add null element to stack"));
+        stack.elements = new ArrayList<>(elements);
+        stack.elements.add(requireNonNull(
+              element, "Attempted to add null element to stack"));
         return stack;
     }
 
@@ -58,10 +59,16 @@ public class Stack<E> {
 
     /**
      * @return a new stack containing all but the top element
+     *
+     * @throws IllegalStateException if the stack is empty
      */
     public @Nonnull Stack<E> pop() {
+        if (elements.isEmpty()) {
+            throw new IllegalStateException("Cannot pop an empty stack");
+        }
+
         var stack = new Stack<E>();
-        stack.elements = new ArrayList<>(this.elements);
+        stack.elements = new ArrayList<>(elements);
         stack.elements.remove(elements.size() - 1);
         return stack;
     }
