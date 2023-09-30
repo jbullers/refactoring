@@ -1,6 +1,7 @@
 package testing;
 
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 class PomodoroModel {
 
@@ -26,35 +27,36 @@ class PomodoroModel {
         return pomodorosCompleted;
     }
 
-    void pomodorosCompleted(int pomodorosCompleted) {
-        this.pomodorosCompleted = pomodorosCompleted;
-    }
-
     Session session() {
         return session;
-    }
-
-    void session(Session session) {
-        this.session = session;
-    }
-
-    Duration workDuration() {
-        return workDuration;
-    }
-
-    Duration longBreakDuration() {
-        return longBreakDuration;
-    }
-
-    Duration shortBreakDuration() {
-        return shortBreakDuration;
     }
 
     Duration currentDuration() {
         return currentDuration;
     }
 
-    void currentDuration(Duration currentDuration) {
-        this.currentDuration = currentDuration;
+    void tick(Runnable onZeroDuration) {
+        currentDuration = currentDuration.minus(1, ChronoUnit.SECONDS);
+        if (currentDuration.isZero()) {
+            onZeroDuration.run();
+            if (session == Session.WORK) {
+                pomodorosCompleted = pomodorosCompleted + 1;
+
+                if (pomodorosCompleted == MAX_WORK_POMODOROS) {
+                    session = Session.LONG_BREAK;
+                    currentDuration = longBreakDuration;
+                } else {
+                    session = Session.SHORT_BREAK;
+                    currentDuration = shortBreakDuration;
+                }
+            } else if (session == Session.LONG_BREAK) {
+                pomodorosCompleted = 0;
+                session = Session.WORK;
+                currentDuration = workDuration;
+            } else if (session == Session.SHORT_BREAK) {
+                session = Session.WORK;
+                currentDuration = workDuration;
+            }
+        }
     }
 }

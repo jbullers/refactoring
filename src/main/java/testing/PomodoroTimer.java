@@ -94,33 +94,9 @@ public class PomodoroTimer extends JPanel {
     }
 
     void countdownTimer(ActionEvent e) {
-        model.currentDuration(model.currentDuration().minus(1, ChronoUnit.SECONDS));
-        if (model.currentDuration().isZero()) {
-            toggleTimer();
-
-            if (model.session() == PomodoroModel.Session.WORK) {
-                model.pomodorosCompleted(model.pomodorosCompleted() + 1);
-                setPomodorosLabel();
-
-                if (model.pomodorosCompleted() == PomodoroModel.MAX_WORK_POMODOROS) {
-                    model.session(PomodoroModel.Session.LONG_BREAK);
-                    model.currentDuration(model.longBreakDuration());
-                } else {
-                    model.session(PomodoroModel.Session.SHORT_BREAK);
-                    model.currentDuration(model.shortBreakDuration());
-                }
-            } else if (model.session() == PomodoroModel.Session.LONG_BREAK) {
-                model.pomodorosCompleted(0);
-                setPomodorosLabel();
-                model.session(PomodoroModel.Session.WORK);
-                model.currentDuration(model.workDuration());
-            } else if (model.session() == PomodoroModel.Session.SHORT_BREAK) {
-                model.session(PomodoroModel.Session.WORK);
-                model.currentDuration(model.workDuration());
-            }
-
-            setSessionLabel();
-        }
+        model.tick(this::toggleTimer);
+        setPomodorosLabel();
+        setSessionLabel();
         setTimerLabel();
     }
 
