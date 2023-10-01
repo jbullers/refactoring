@@ -13,13 +13,16 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import testing.PomodoroModel.Session;
+import testing.PomodoroModel.SessionDurations;
+import testing.PomodoroModel.SessionEnded;
+import testing.PomodoroModel.SessionStarted;
+import testing.PomodoroModel.State;
+import testing.PomodoroModel.Tick;
 
 public class PomodoroTimer extends JPanel {
 
     private static final String INCOMPLETE_POMODORO = "◌";
     private static final String COMPLETE_POMODORO = "●";
-
-    private final PomodoroModel model;
 
     private final JLabel completedPomodorosLabel = new JLabel();
     private final JLabel sessionLabel = new JLabel();
@@ -28,7 +31,6 @@ public class PomodoroTimer extends JPanel {
     private final Timer timer;
 
     PomodoroTimer(PomodoroModel model) {
-        this.model = model;
         timer = new Timer(1000, evt -> model.tick());
 
         setLayout(new BorderLayout());
@@ -36,13 +38,16 @@ public class PomodoroTimer extends JPanel {
         add(timerPanel(), BorderLayout.CENTER);
         add(startButton(), BorderLayout.PAGE_END);
 
-        model.registerPomodoroListener(evt -> {
-            if (evt.currentDuration().isZero()) {
-                toggleTimer();
+        model.registerPomodoroListener(event -> {
+            switch (event) {
+                case SessionStarted(State(var pomodorosCompleted, var session, var currentDuration)) -> {
+                    setPomodorosLabel(pomodorosCompleted);
+                    setSessionLabel(session);
+                    setTimerLabel(currentDuration);
+                }
+                case Tick(var duration) -> setTimerLabel(duration);
+                case SessionEnded sessionEnded -> toggleTimer();
             }
-            setPomodorosLabel(evt.pomodorosCompleted());
-            setSessionLabel(evt.session());
-            setTimerLabel(evt.currentDuration());
         });
     }
 
@@ -104,10 +109,10 @@ public class PomodoroTimer extends JPanel {
         var frame = new JFrame("Pomodoro");
         frame.setContentPane(
               new PomodoroTimer(
-                    new PomodoroModel(
+                    new PomodoroModel(new SessionDurations(
                           Duration.of(10, ChronoUnit.SECONDS),
                           Duration.of(5, ChronoUnit.SECONDS),
-                          Duration.of(3, ChronoUnit.SECONDS))));
+                          Duration.of(3, ChronoUnit.SECONDS)))));
         frame.pack();
         frame.setVisible(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

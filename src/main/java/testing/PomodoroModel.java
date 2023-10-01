@@ -5,7 +5,10 @@ import java.time.temporal.ChronoUnit;
 
 class PomodoroModel {
 
-    record PomodoroEvent(int pomodorosCompleted, Session session, Duration currentDuration) {}
+    sealed interface PomodoroEvent {}
+    record SessionStarted(State state) implements PomodoroEvent {}
+    record Tick(Duration duration) implements PomodoroEvent {}
+    record SessionEnded() implements PomodoroEvent {}
 
     @FunctionalInterface
     interface PomodoroListener {
@@ -14,27 +17,25 @@ class PomodoroModel {
 
     static final int MAX_WORK_POMODOROS = 4;
     enum Session { WORK, SHORT_BREAK, LONG_BREAK }
+    record SessionDurations(Duration workDuration, Duration longBreakDuration, Duration shortBreakDuration) {}
+    record State(int pomodorosCompleted, Session session, Duration currentDuration) {}
 
-    private int pomodorosCompleted;
-
-    private Session session = Session.WORK;
-    private final Duration workDuration;
-    private final Duration longBreakDuration;
-    private final Duration shortBreakDuration;
-    private Duration currentDuration;
+    private final SessionDurations sessionDurations;
+    private State state;
 
     private PomodoroListener listener;
 
-    PomodoroModel(Duration workDuration, Duration longBreakDuration, Duration shortBreakDuration) {
-        this.workDuration = workDuration;
-        this.longBreakDuration = longBreakDuration;
-        this.shortBreakDuration = shortBreakDuration;
-        currentDuration = workDuration;
+    PomodoroModel(SessionDurations sessionDurations) {
+        this(sessionDurations, new State(0, Session.WORK, sessionDurations.workDuration()));
+    }
+    PomodoroModel(SessionDurations sessionDurations, State state) {
+        this.sessionDurations = sessionDurations;
+        this.state = state;
     }
 
     void registerPomodoroListener(PomodoroListener listener) {
         this.listener = listener;
-        fireEvent(new PomodoroEvent(pomodorosCompleted, session, currentDuration));
+        fireEvent(new SessionStarted(state));
     }
 
     private void fireEvent(PomodoroEvent event) {
@@ -44,28 +45,25 @@ class PomodoroModel {
     }
 
     void tick() {
-        currentDuration = currentDuration.minus(1, ChronoUnit.SECONDS);
-        if (currentDuration.isZero()) {
-            fireEvent(new PomodoroEvent(pomodorosCompleted, session, Duration.ZERO));
-            if (session == Session.WORK) {
-                pomodorosCompleted = pomodorosCompleted + 1;
-
-                if (pomodorosCompleted == MAX_WORK_POMODOROS) {
-                    session = Session.LONG_BREAK;
-                    currentDuration = longBreakDuration;
-                } else {
-                    session = Session.SHORT_BREAK;
-                    currentDuration = shortBreakDuration;
+        var updatedDuration = state.currentDuration().minus(1, ChronoUnit.SECONDS);
+        if (updatedDuration.isZero()) {
+            fireEvent(new SessionEnded());
+            state = switch (state.session()) {
+                case WORK -> {
+                    var updatedPomodoros = state.pomodorosCompleted() + 1;
+                    yield updatedPomodoros == MAX_WORK_POMODOROS ?
+                          new State(updatedPomodoros, Session.LONG_BREAK, sessionDurations.longBreakDuration()) :
+                          new State(updatedPomodoros, Session.SHORT_BREAK, sessionDurations.shortBreakDuration());
                 }
-            } else if (session == Session.LONG_BREAK) {
-                pomodorosCompleted = 0;
-                session = Session.WORK;
-                currentDuration = workDuration;
-            } else if (session == Session.SHORT_BREAK) {
-                session = Session.WORK;
-                currentDuration = workDuration;
-            }
+                case SHORT_BREAK ->
+                      new State(state.pomodorosCompleted(), Session.WORK, sessionDurations.workDuration());
+                case LONG_BREAK ->
+                      new State(0, Session.WORK, sessionDurations.workDuration());
+            };
+            fireEvent(new SessionStarted(state));
+        } else {
+            state = new State(state.pomodorosCompleted(), state.session(), updatedDuration);
+            fireEvent(new Tick(updatedDuration));
         }
-        fireEvent(new PomodoroEvent(pomodorosCompleted, session, currentDuration));
     }
 }
