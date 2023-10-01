@@ -5,6 +5,13 @@ import java.time.temporal.ChronoUnit;
 
 class PomodoroModel {
 
+    record PomodoroEvent(int pomodorosCompleted, Session session, Duration currentDuration) {}
+
+    @FunctionalInterface
+    interface PomodoroListener {
+        void stateChanged(PomodoroEvent event);
+    }
+
     static final int MAX_WORK_POMODOROS = 4;
     enum Session { WORK, SHORT_BREAK, LONG_BREAK }
 
@@ -16,6 +23,8 @@ class PomodoroModel {
     private final Duration shortBreakDuration;
     private Duration currentDuration;
 
+    private PomodoroListener listener;
+
     PomodoroModel(Duration workDuration, Duration longBreakDuration, Duration shortBreakDuration) {
         this.workDuration = workDuration;
         this.longBreakDuration = longBreakDuration;
@@ -23,22 +32,21 @@ class PomodoroModel {
         currentDuration = workDuration;
     }
 
-    int pomodorosCompleted() {
-        return pomodorosCompleted;
+    void registerPomodoroListener(PomodoroListener listener) {
+        this.listener = listener;
+        fireEvent(new PomodoroEvent(pomodorosCompleted, session, currentDuration));
     }
 
-    Session session() {
-        return session;
+    private void fireEvent(PomodoroEvent event) {
+        if (listener != null) {
+            listener.stateChanged(event);
+        }
     }
 
-    Duration currentDuration() {
-        return currentDuration;
-    }
-
-    void tick(Runnable onZeroDuration) {
+    void tick() {
         currentDuration = currentDuration.minus(1, ChronoUnit.SECONDS);
         if (currentDuration.isZero()) {
-            onZeroDuration.run();
+            fireEvent(new PomodoroEvent(pomodorosCompleted, session, Duration.ZERO));
             if (session == Session.WORK) {
                 pomodorosCompleted = pomodorosCompleted + 1;
 
@@ -58,5 +66,6 @@ class PomodoroModel {
                 currentDuration = workDuration;
             }
         }
+        fireEvent(new PomodoroEvent(pomodorosCompleted, session, currentDuration));
     }
 }

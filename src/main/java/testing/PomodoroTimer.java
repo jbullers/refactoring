@@ -2,7 +2,6 @@ package testing;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.event.ActionEvent;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import javax.swing.BorderFactory;
@@ -13,6 +12,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+import testing.PomodoroModel.Session;
 
 public class PomodoroTimer extends JPanel {
 
@@ -25,21 +25,30 @@ public class PomodoroTimer extends JPanel {
     private final JLabel sessionLabel = new JLabel();
     private final JLabel timerLabel = new JLabel();
     private final JButton startButton = new JButton("Start");
-    private final Timer timer = new Timer(1000, this::countdownTimer);
+    private final Timer timer;
 
     PomodoroTimer(PomodoroModel model) {
         this.model = model;
+        timer = new Timer(1000, evt -> model.tick());
 
         setLayout(new BorderLayout());
         add(pomodorosPanel(), BorderLayout.PAGE_START);
         add(timerPanel(), BorderLayout.CENTER);
         add(startButton(), BorderLayout.PAGE_END);
+
+        model.registerPomodoroListener(evt -> {
+            if (evt.currentDuration().isZero()) {
+                toggleTimer();
+            }
+            setPomodorosLabel(evt.pomodorosCompleted());
+            setSessionLabel(evt.session());
+            setTimerLabel(evt.currentDuration());
+        });
     }
 
     JPanel pomodorosPanel() {
         completedPomodorosLabel.setFont(completedPomodorosLabel.getFont().deriveFont(24f));
         completedPomodorosLabel.setForeground(Color.RED);
-        setPomodorosLabel();
 
         var panel = new JPanel();
         panel.add(completedPomodorosLabel);
@@ -47,17 +56,15 @@ public class PomodoroTimer extends JPanel {
         return panel;
     }
 
-    void setPomodorosLabel() {
+    void setPomodorosLabel(int pomodorosCompleted) {
         completedPomodorosLabel.setText(
-              COMPLETE_POMODORO.repeat(model.pomodorosCompleted()) +
-                    INCOMPLETE_POMODORO.repeat(PomodoroModel.MAX_WORK_POMODOROS - model.pomodorosCompleted()));
+              COMPLETE_POMODORO.repeat(pomodorosCompleted) +
+                    INCOMPLETE_POMODORO.repeat(PomodoroModel.MAX_WORK_POMODOROS - pomodorosCompleted));
     }
 
     Box timerPanel() {
         sessionLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 0));
-        setSessionLabel();
         timerLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 10));
-        setTimerLabel();
 
         var box = Box.createHorizontalBox();
         box.add(sessionLabel);
@@ -67,15 +74,15 @@ public class PomodoroTimer extends JPanel {
         return box;
     }
 
-    void setSessionLabel() {
-        sessionLabel.setText(model.session() == PomodoroModel.Session.WORK ? "Work" : "Break");
+    void setSessionLabel(Session session) {
+        sessionLabel.setText(session == PomodoroModel.Session.WORK ? "Work" : "Break");
     }
 
-    void setTimerLabel() {
+    void setTimerLabel(Duration currentDuration) {
         timerLabel.setText(String.format(
               "%02d:%02d",
-              model.currentDuration().toMinutes(),
-              model.currentDuration().toSecondsPart()));
+              currentDuration.toMinutes(),
+              currentDuration.toSecondsPart()));
     }
 
     JButton startButton() {
@@ -91,13 +98,6 @@ public class PomodoroTimer extends JPanel {
             timer.start();
             startButton.setText("Stop");
         }
-    }
-
-    void countdownTimer(ActionEvent e) {
-        model.tick(this::toggleTimer);
-        setPomodorosLabel();
-        setSessionLabel();
-        setTimerLabel();
     }
 
     static void createAndShowGui() {
