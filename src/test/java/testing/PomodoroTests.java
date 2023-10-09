@@ -1,106 +1,71 @@
 package testing;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.Test;
-import testing.PomodoroModel.PomodoroEvent;
-import testing.PomodoroModel.PomodoroListener;
-import testing.PomodoroModel.Session;
+import testing.PomodoroModel.BreakSessionActive;
+import testing.PomodoroModel.BreakSessionEnded;
 import testing.PomodoroModel.SessionDurations;
-import testing.PomodoroModel.SessionEnded;
-import testing.PomodoroModel.SessionStarted;
-import testing.PomodoroModel.State;
-import testing.PomodoroModel.Tick;
+import testing.PomodoroModel.WorkSessionActive;
+import testing.PomodoroModel.WorkSessionEnded;
 
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
-import static testing.PomodoroModel.Session.LONG_BREAK;
-import static testing.PomodoroModel.Session.SHORT_BREAK;
-import static testing.PomodoroModel.Session.WORK;
 
 public class PomodoroTests {
 
-    private final CapturingEventListener capturingEventListener = new CapturingEventListener();
-
     @Test
     public void shouldCountDownDurationOnTick() {
-        PomodoroModel model = new PomodoroModel(
-              sessionDurations(),
-              new State(0, WORK, Duration.of(5, SECONDS)));
-        model.registerPomodoroListener(capturingEventListener);
+        PomodoroModel model = new PomodoroModel(sessionDurations());
 
-        model.tick();
-        model.tick();
+        var state = model.tick(model.tick(new WorkSessionActive(0, Duration.of(5, SECONDS))));
 
-        assertThat(capturingEventListener.events, contains(List.of(
-              is(equalTo(new SessionStarted(new State(0, WORK, Duration.of(5, SECONDS))))),
-              is(equalTo(new Tick(Duration.of(4, SECONDS)))),
-              is(equalTo(new Tick(Duration.of(3, SECONDS)))))));
+        assertThat(state, is(equalTo(new WorkSessionActive(0, Duration.of(3, SECONDS)))));
     }
 
     @Test
     public void shouldTransitionToShortBreakAfterCountingDownWorkWhenPomodoroCountIsLessThanMax() {
         PomodoroModel model = new PomodoroModel(
-              withDuration(sessionDurations(), SHORT_BREAK, Duration.of(5, SECONDS)),
-              new State(0, WORK, Duration.of(1, SECONDS)));
-        model.registerPomodoroListener(capturingEventListener);
+              withDuration(sessionDurations(), Session.SHORT_BREAK, Duration.of(5, SECONDS)));
 
-        model.tick();
-
-        assertThat(capturingEventListener.events, contains(List.of(
-              is(equalTo(new SessionStarted(new State(0, WORK, Duration.of(1, SECONDS))))),
-              is(instanceOf(SessionEnded.class)),
-              is(equalTo(new SessionStarted(new State(1, SHORT_BREAK, Duration.of(5, SECONDS))))))));
+        var state = model.tick(new WorkSessionActive(0, Duration.of(1, SECONDS)));
+        assertThat(state, is(equalTo(new WorkSessionEnded(1))));
+        state = model.tick(state);
+        assertThat(state, is(equalTo(new BreakSessionActive(1, Duration.of(5, SECONDS)))));
     }
 
     @Test
     public void shouldTransitionToLongBreakAfterCountingDownWorkWhenPomodoroCountIsMax() {
         PomodoroModel model = new PomodoroModel(
-              withDuration(sessionDurations(), LONG_BREAK, Duration.of(10, SECONDS)),
-              new State(3, WORK, Duration.of(1, SECONDS)));
-        model.registerPomodoroListener(capturingEventListener);
+              withDuration(sessionDurations(), Session.LONG_BREAK, Duration.of(10, SECONDS)));
 
-        model.tick();
-
-        assertThat(capturingEventListener.events, contains(List.of(
-              is(equalTo(new SessionStarted(new State(3, WORK, Duration.of(1, SECONDS))))),
-              is(instanceOf(SessionEnded.class)),
-              is(equalTo(new SessionStarted(new State(4, LONG_BREAK, Duration.of(10, SECONDS))))))));
+        var state = model.tick(new WorkSessionActive(3, Duration.of(1, SECONDS)));
+        assertThat(state, is(equalTo(new WorkSessionEnded(4))));
+        state = model.tick(state);
+        assertThat(state, is(equalTo(new BreakSessionActive(4, Duration.of(10, SECONDS)))));
     }
 
     @Test
     public void shouldTransitionToWorkAfterCountingDownShortBreak() {
         PomodoroModel model = new PomodoroModel(
-              withDuration(sessionDurations(), WORK, Duration.of(3, SECONDS)),
-              new State(2, SHORT_BREAK, Duration.of(1, SECONDS)));
-        model.registerPomodoroListener(capturingEventListener);
+              withDuration(sessionDurations(), Session.WORK, Duration.of(3, SECONDS)));
 
-        model.tick();
-
-        assertThat(capturingEventListener.events, contains(List.of(
-              is(equalTo(new SessionStarted(new State(2, SHORT_BREAK, Duration.of(1, SECONDS))))),
-              is(instanceOf(SessionEnded.class)),
-              is(equalTo(new SessionStarted(new State(2, WORK, Duration.of(3, SECONDS))))))));
+        var state = model.tick(new BreakSessionActive(2, Duration.of(1, SECONDS)));
+        assertThat(state, is(equalTo(new BreakSessionEnded(2))));
+        state = model.tick(state);
+        assertThat(state, is(equalTo(new WorkSessionActive(2, Duration.of(3, SECONDS)))));
     }
 
     @Test
     public void shouldResetPomodorosAndTransitionToWorkAfterCountingDownLongBreak() {
         PomodoroModel model = new PomodoroModel(
-              withDuration(sessionDurations(), WORK, Duration.of(3, SECONDS)),
-              new State(4, LONG_BREAK, Duration.of(1, SECONDS)));
-        model.registerPomodoroListener(capturingEventListener);
+              withDuration(sessionDurations(), Session.WORK, Duration.of(3, SECONDS)));
 
-        model.tick();
-
-        assertThat(capturingEventListener.events, contains(List.of(
-              is(equalTo(new SessionStarted(new State(4, LONG_BREAK, Duration.of(1, SECONDS))))),
-              is(instanceOf(SessionEnded.class)),
-              is(equalTo(new SessionStarted(new State(0, WORK, Duration.of(3, SECONDS))))))));
+        var state = model.tick(new BreakSessionActive(4, Duration.of(1, SECONDS)));
+        assertThat(state, is(equalTo(new BreakSessionEnded(4))));
+        state = model.tick(state);
+        assertThat(state, is(equalTo(new WorkSessionActive(0, Duration.of(3, SECONDS)))));
     }
 
     private static SessionDurations sessionDurations() {
@@ -108,6 +73,8 @@ public class PomodoroTests {
                                     Duration.of(2, SECONDS),
                                     Duration.of(1, SECONDS));
     }
+
+    private enum Session { WORK, SHORT_BREAK, LONG_BREAK }
 
     private static SessionDurations withDuration(
           SessionDurations sessionDurations, Session session, Duration duration) {
@@ -122,15 +89,5 @@ public class PomodoroTests {
                                                      sessionDurations.longBreakDuration(),
                                                      duration);
         };
-    }
-
-    private static class CapturingEventListener implements PomodoroListener {
-
-        final List<PomodoroEvent> events = new ArrayList<>();
-
-        @Override
-        public void stateChanged(PomodoroEvent event) {
-            events.add(event);
-        }
     }
 }

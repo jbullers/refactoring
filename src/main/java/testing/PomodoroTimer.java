@@ -12,12 +12,11 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
-import testing.PomodoroModel.Session;
+import testing.PomodoroModel.BreakSessionActive;
+import testing.PomodoroModel.EndedSession;
 import testing.PomodoroModel.SessionDurations;
-import testing.PomodoroModel.SessionEnded;
-import testing.PomodoroModel.SessionStarted;
 import testing.PomodoroModel.State;
-import testing.PomodoroModel.Tick;
+import testing.PomodoroModel.WorkSessionActive;
 
 public class PomodoroTimer extends JPanel {
 
@@ -30,25 +29,38 @@ public class PomodoroTimer extends JPanel {
     private final JButton startButton = new JButton("Start");
     private final Timer timer;
 
-    PomodoroTimer(PomodoroModel model) {
-        timer = new Timer(1000, evt -> model.tick());
+    private State state;
+
+    PomodoroTimer(PomodoroModel model, State initialState) {
+        state = initialState;
+        timer = new Timer(1000, evt -> {
+            do {
+                state = model.tick(state);
+                handleStateUpdated(state);
+            } while (state instanceof EndedSession);
+        });
+        handleStateUpdated(initialState);
 
         setLayout(new BorderLayout());
         add(pomodorosPanel(), BorderLayout.PAGE_START);
         add(timerPanel(), BorderLayout.CENTER);
         add(startButton(), BorderLayout.PAGE_END);
+    }
 
-        model.registerPomodoroListener(event -> {
-            switch (event) {
-                case SessionStarted(State(var pomodorosCompleted, var session, var currentDuration)) -> {
-                    setPomodorosLabel(pomodorosCompleted);
-                    setSessionLabel(session);
-                    setTimerLabel(currentDuration);
-                }
-                case Tick(var duration) -> setTimerLabel(duration);
-                case SessionEnded sessionEnded -> toggleTimer();
+    private void handleStateUpdated(State state) {
+        switch (state) {
+            case WorkSessionActive(int pomodorosCompleted, Duration currentDuration) -> {
+                setPomodorosLabel(pomodorosCompleted);
+                sessionLabel.setText("Work");
+                setTimerLabel(currentDuration);
             }
-        });
+            case BreakSessionActive(int pomodorosCompleted, Duration currentDuration) -> {
+                setPomodorosLabel(pomodorosCompleted);
+                sessionLabel.setText("Break");
+                setTimerLabel(currentDuration);
+            }
+            case EndedSession endedSession -> toggleTimer();
+        }
     }
 
     JPanel pomodorosPanel() {
@@ -77,10 +89,6 @@ public class PomodoroTimer extends JPanel {
         box.add(timerLabel);
 
         return box;
-    }
-
-    void setSessionLabel(Session session) {
-        sessionLabel.setText(session == PomodoroModel.Session.WORK ? "Work" : "Break");
     }
 
     void setTimerLabel(Duration currentDuration) {
@@ -112,7 +120,8 @@ public class PomodoroTimer extends JPanel {
                     new PomodoroModel(new SessionDurations(
                           Duration.of(10, ChronoUnit.SECONDS),
                           Duration.of(5, ChronoUnit.SECONDS),
-                          Duration.of(3, ChronoUnit.SECONDS)))));
+                          Duration.of(3, ChronoUnit.SECONDS))),
+                    new WorkSessionActive(0, Duration.of(10, ChronoUnit.SECONDS))));
         frame.pack();
         frame.setVisible(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
