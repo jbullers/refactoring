@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package di.command;
+package di.command.user;
 
-import di.amounts.MaximumWithdrawal;
+import di.MaximumWithdrawal;
 import di.PerSession;
 import java.math.BigDecimal;
 import javax.inject.Inject;

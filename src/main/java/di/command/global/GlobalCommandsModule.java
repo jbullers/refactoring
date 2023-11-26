@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 
-package di.command;
+package di.command.global;
 
 import dagger.Binds;
 import dagger.BindsOptionalOf;
 import dagger.Module;
 import dagger.multibindings.IntoMap;
 import dagger.multibindings.StringKey;
-import di.db.Database.Account;
+import di.Account;
+import di.command.Command;
 
 /** Installs basic commands. */
 @Module
-public interface CommandsModule {
+interface GlobalCommandsModule {
   @Binds
   @IntoMap
   @StringKey("hello")

@@ -14,28 +14,27 @@
  * limitations under the License.
  */
 
-package di.command;
+package di.command.global;
 
-import dagger.Binds;
-import dagger.Module;
-import dagger.multibindings.IntoMap;
-import dagger.multibindings.StringKey;
+import di.command.Command;
+import di.output.Outputter;
+import java.util.List;
+import javax.inject.Inject;
 
-/** Commands that are only applicable when a user is logged in. */
-@Module
-interface UserCommandsModule {
-  @Binds
-  @IntoMap
-  @StringKey("deposit")
-  Command deposit(DepositCommand command);
+final class HelloWorldCommand implements Command {
+  private final Outputter outputter;
 
-  @Binds
-  @IntoMap
-  @StringKey("withdraw")
-  Command withdraw(WithdrawCommand command);
+  @Inject
+  HelloWorldCommand(Outputter outputter) {
+    this.outputter = outputter;
+  }
 
-  @Binds
-  @IntoMap
-  @StringKey("logout")
-  Command logout(LogoutCommand command);
+  @Override
+  public Result handleInput(List<String> args) {
+    if (!args.isEmpty()) {
+      return Result.invalid();
+    }
+    outputter.output("howdy!");
+    return Result.handled();
+  }
 }

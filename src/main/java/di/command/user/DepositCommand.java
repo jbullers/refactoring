@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package di.command;
+package di.command.user;
 
-import di.db.Database.Account;
+import di.Account;
 import di.output.Outputter;
 import java.math.BigDecimal;
 import javax.inject.Inject;

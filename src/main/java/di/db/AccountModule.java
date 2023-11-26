@@ -19,7 +19,7 @@ package di.db;
 import dagger.Module;
 import dagger.Provides;
 import di.Username;
-import di.db.Database.Account;
+import di.Account;
 
 /** Bindings for the {@link Account} of the currently signed-in user. */
 @Module

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package di;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -21,19 +20,31 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import di.command.Command;
 import di.command.CommandProcessor;
 import di.command.CommandProcessorFactory;
+import di.db.InMemoryDatabase;
+import java.math.BigDecimal;
 import java.util.Scanner;
 
-/** Main class for the command-line ATM. */
+/**
+ * Main class for the command-line ATM.
+ */
 class CommandLineAtm {
-  public static void main(String[] args) {
-    Scanner scanner = new Scanner(System.in, UTF_8.name());
-    CommandProcessor commandProcessor = CommandProcessorFactory.create().commandProcessor();
 
-    while (scanner.hasNextLine()) {
-      Command.Status commandStatus = commandProcessor.process(scanner.nextLine());
-      if (commandStatus.equals(Command.Status.INPUT_COMPLETED)) {
-        break;
-      }
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in, UTF_8.name());
+        CommandProcessor commandProcessor =
+              CommandProcessorFactory.builder()
+                                     .minimumBalance(BigDecimal.ZERO)
+                                     .maximumWithdrawl(new BigDecimal(1000))
+                                     .database(new InMemoryDatabase())
+                                     .outputter(System.out::println)
+                                     .build()
+                                     .commandProcessor();
+
+        while (scanner.hasNextLine()) {
+            Command.Status commandStatus = commandProcessor.process(scanner.nextLine());
+            if (commandStatus.equals(Command.Status.INPUT_COMPLETED)) {
+                break;
+            }
+        }
     }
-  }
 }

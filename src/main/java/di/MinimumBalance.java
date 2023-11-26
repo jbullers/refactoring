@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package di.output;
+package di;
 
-import dagger.Module;
-import dagger.Provides;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-@Module
-public final class SystemOutModule {
-  @Provides
-  static Outputter textOutputter() {
-    return System.out::println;
-  }
-}
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import javax.inject.Qualifier;
+
+/** Qualifier for the minimum balance an account may have. */
+@Qualifier
+@Documented
+@Retention(RUNTIME)
+public @interface MinimumBalance {}

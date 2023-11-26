@@ -16,20 +16,9 @@
 
 package di.db;
 
-import java.math.BigDecimal;
+import di.Account;
 
 /** An ATM database. */
 public interface Database {
   Account getAccount(String username);
-
-  /** An individual user's account. */
-  public interface Account {
-    String username();
-
-    void deposit(BigDecimal amount);
-
-    void withdraw(BigDecimal amount);
-
-    BigDecimal balance();
-  }
 }

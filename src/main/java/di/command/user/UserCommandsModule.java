@@ -14,16 +14,29 @@
  * limitations under the License.
  */
 
-package di.amounts;
+package di.command.user;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import dagger.Binds;
+import dagger.Module;
+import dagger.multibindings.IntoMap;
+import dagger.multibindings.StringKey;
+import di.command.Command;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.Retention;
-import javax.inject.Qualifier;
+/** Commands that are only applicable when a user is logged in. */
+@Module
+interface UserCommandsModule {
+  @Binds
+  @IntoMap
+  @StringKey("deposit")
+  Command deposit(DepositCommand command);
 
-/** Qualifier for the minimum balance an account may have. */
-@Qualifier
-@Documented
-@Retention(RUNTIME)
-public @interface MinimumBalance {}
+  @Binds
+  @IntoMap
+  @StringKey("withdraw")
+  Command withdraw(WithdrawCommand command);
+
+  @Binds
+  @IntoMap
+  @StringKey("logout")
+  Command logout(LogoutCommand command);
+}

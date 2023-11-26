@@ -25,12 +25,11 @@ import java.util.Map;
 import javax.inject.Inject;
 
 /** Routes individual text commands to the appropriate {@link Command}(s). */
-final class CommandRouter {
+public final class CommandRouter {
   private final Map<String, Command> commands;
   private final Outputter outputter;
 
-  @Inject
-  CommandRouter(Map<String, Command> commands, Outputter outputter) {
+  public CommandRouter(Map<String, Command> commands, Outputter outputter) {
     this.commands = commands;
     this.outputter = outputter;
   }

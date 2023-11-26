@@ -16,6 +16,7 @@
 
 package di.db;
 
+import di.Account;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,11 +25,11 @@ import javax.inject.Singleton;
 
 /** A database that stores all of its data in memory. */
 @Singleton
-final class InMemoryDatabase implements Database {
+public final class InMemoryDatabase implements Database {
   private final Map<String, Account> accounts = new HashMap<>();
 
   @Inject
-  InMemoryDatabase() {}
+  public InMemoryDatabase() {}
 
   @Override
   public Account getAccount(String username) {

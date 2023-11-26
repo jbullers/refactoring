@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package di.command;
+package di.command.user;
 
-import di.db.Database.Account;
+import di.Account;
+import di.command.Command;
 import di.output.Outputter;
 import java.util.List;
 import javax.inject.Inject;

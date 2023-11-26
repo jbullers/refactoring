@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package di.command;
+package di.command.user;
 
-import di.amounts.MinimumBalance;
-import di.db.Database.Account;
+import di.Account;
+import di.MinimumBalance;
 import di.output.Outputter;
 import java.math.BigDecimal;
 import javax.inject.Inject;

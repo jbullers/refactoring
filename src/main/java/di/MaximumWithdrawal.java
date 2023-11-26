@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-package di.db;
+package di;
 
-import dagger.Binds;
-import dagger.Module;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-@Module
-public interface InMemoryDatabaseModule {
-  @Binds
-  Database inMemory(InMemoryDatabase database);
-}
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import javax.inject.Qualifier;
+
+/**
+ * Qualifier for the maximum amount that can be withdrawn from an account in a single transaction.
+ */
+@Qualifier
+@Documented
+@Retention(RUNTIME)
+public @interface MaximumWithdrawal {}

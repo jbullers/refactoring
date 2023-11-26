@@ -14,26 +14,28 @@
  * limitations under the License.
  */
 
-package di.command;
+package di.command.user;
 
-import di.output.Outputter;
-import java.util.List;
-import javax.inject.Inject;
+import dagger.BindsInstance;
+import dagger.Module;
+import dagger.Subcomponent;
+import di.PerSession;
+import di.Username;
+import di.command.CommandRouter;
+import di.db.AccountModule;
 
-final class HelloWorldCommand implements Command {
-  private final Outputter outputter;
+@PerSession
+@Subcomponent(modules = { AccountModule.class, UserCommandsModule.class})
+public interface UserCommandsRouter {
 
-  @Inject
-  HelloWorldCommand(Outputter outputter) {
-    this.outputter = outputter;
+  CommandRouter router();
+
+  @Subcomponent.Factory
+  interface Factory {
+    UserCommandsRouter create(
+          @BindsInstance @Username String username);
   }
 
-  @Override
-  public Result handleInput(List<String> args) {
-    if (!args.isEmpty()) {
-      return Result.invalid();
-    }
-    outputter.output("howdy!");
-    return Result.handled();
-  }
+  @Module(subcomponents = UserCommandsRouter.class)
+  interface InstallationModule {}
 }

@@ -41,19 +41,19 @@ public interface Command {
       this.nestedCommandRouter = nestedCommandRouter;
     }
 
-    static Result invalid() {
+    public static Result invalid() {
       return new Result(Status.INVALID, Optional.empty());
     }
 
-    static Result handled() {
+    public static Result handled() {
       return new Result(Status.HANDLED, Optional.empty());
     }
 
-    static Result inputCompleted() {
+    public static Result inputCompleted() {
       return new Result(Status.INPUT_COMPLETED, Optional.empty());
     }
 
-    static Result enterNestedCommandSet(CommandRouter nestedCommandRouter) {
+    public static Result enterNestedCommandSet(CommandRouter nestedCommandRouter) {
       return new Result(Status.HANDLED, Optional.of(nestedCommandRouter));
     }
 

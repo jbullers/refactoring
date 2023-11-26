@@ -13,34 +13,55 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package di.command;
 
+import dagger.BindsInstance;
 import dagger.Component;
-import di.db.InMemoryDatabaseModule;
-import di.output.SystemOutModule;
+import di.MaximumWithdrawal;
+import di.MinimumBalance;
+import di.command.global.CommandsRouterModule;
+import di.command.user.UserCommandsRouter;
+import di.db.Database;
+import di.output.Outputter;
+import java.math.BigDecimal;
 import javax.inject.Singleton;
 
 /**
- * Hand-written API for interfacing with Dagger. The command-line ATM needs a single class to
- * execute: {@link CommandProcessor}.
+ * Hand-written API for interfacing with Dagger. The command-line ATM needs a single class to execute:
+ * {@link CommandProcessor}.
  *
  * <p>The list of {@code modules} declares where Dagger should look, besides {@link
- * javax.inject.Inject}-annotated constructors, to help instantiate {@link CommandProcessor} and its
- * dependencies.
+ * javax.inject.Inject}-annotated constructors, to help instantiate {@link CommandProcessor} and its dependencies.
  */
 @Singleton
 @Component(
-    modules = {
-      CommandsModule.class,
-      InMemoryDatabaseModule.class,
-      UserCommandsRouter.InstallationModule.class,
-      SystemOutModule.class,
-    })
+      modules = {
+            CommandsRouterModule.class,
+            UserCommandsRouter.InstallationModule.class,
+      })
 public interface CommandProcessorFactory {
-  CommandProcessor commandProcessor();
 
-  static CommandProcessorFactory create() {
-    return DaggerCommandProcessorFactory.create();
-  }
+    CommandProcessor commandProcessor();
+
+    @Component.Builder
+    interface Builder {
+
+        @BindsInstance
+        Builder minimumBalance(@MinimumBalance BigDecimal minimumBalance);
+
+        @BindsInstance
+        Builder maximumWithdrawl(@MaximumWithdrawal BigDecimal maximumWithdrawl);
+
+        @BindsInstance
+        Builder database(Database database);
+
+        @BindsInstance
+        Builder outputter(Outputter outputter);
+
+        CommandProcessorFactory build();
+    }
+
+    static CommandProcessorFactory.Builder builder() {
+        return DaggerCommandProcessorFactory.builder();
+    }
 }

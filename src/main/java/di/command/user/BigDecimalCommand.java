@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package di.command;
+package di.command.user;
 
+import di.command.Command;
+import di.command.SingleArgCommand;
 import di.output.Outputter;
 import java.math.BigDecimal;
 

@@ -19,7 +19,7 @@ package di.command;
 import java.util.List;
 
 /** Abstract command that accepts a single argument. */
-abstract class SingleArgCommand implements Command {
+public abstract class SingleArgCommand implements Command {
 
   @Override
   public final Result handleInput(List<String> input) {

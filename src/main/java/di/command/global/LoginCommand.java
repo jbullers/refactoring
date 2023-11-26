@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package di.command;
+package di.command.global;
 
-import di.command.UserCommandsRouter.Factory;
-import di.db.Database.Account;
+import di.Account;
+import di.command.SingleArgCommand;
+import di.command.user.UserCommandsRouter;
+import di.command.user.UserCommandsRouter.Factory;
 import di.output.Outputter;
 import java.util.Optional;
 import javax.inject.Inject;
