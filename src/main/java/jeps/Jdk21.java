@@ -95,6 +95,16 @@ public class Jdk21 {
             };
         }
 
+        static double slope(LineSegment lineSegment) {
+            return switch (lineSegment) {
+                // Vertical
+                case LineSegment(Point(int x1, int y1), Point(int x2, int y2)) when x1 == x2 -> Double.NaN;
+
+                // General
+                case LineSegment(Point(int x1, int y1), Point(int x2, int y2)) -> (double) (y2 - y1) / (x2 - x1);
+            };
+        }
+
         public static void main(String[] args) {
             var triangle = new Polygon(List.of(
                   new LineSegment(new Point(0, 0), new Point(0, 5)),
@@ -103,6 +113,10 @@ public class Jdk21 {
             System.out.println(triangle);
 
             System.out.println(translate(triangle, 10, 10));
+
+            System.out.println(slope(new LineSegment(new Point(0, 0), new Point(0, 5))));
+            System.out.println(slope(new LineSegment(new Point(0, 0), new Point(5, 0))));
+            System.out.println(slope(new LineSegment(new Point(0, 0), new Point(5, 5))));
         }
     }
 
