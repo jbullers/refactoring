@@ -1,6 +1,14 @@
 package jeps;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Gatherer;
 import javax.annotation.Nullable;
+
+import static java.util.stream.Collectors.toSet;
 
 // https://openjdk.org/projects/jdk/22/
 // https://openjdk.org/projects/jdk/23/
@@ -64,12 +72,122 @@ public class JdkFuture {
     // Stream Gatherers
     // https://openjdk.org/jeps/473
 
+    // Provides an extension point to the Streams API similar to Collectors,
+    // but for intermediate operations.
+    static class StreamGatherers {
 
+        record Person(String firstName, String lastName, int age) {}
+
+        public static void main(String[] args) {
+            var people = List.of(
+                  new Person("Mary", "Smith", 28),
+                  new Person("Jason", "Bullers", 37),
+                  new Person("Jane", "Doe", 17),
+                  new Person("Cael", "Bullers", 3),
+                  new Person("John", "Doe", 16),
+                  new Person("John", "Smith", 30),
+                  new Person("Tim", "Smith", 2));
+
+            // Single adult from each family
+//            people.stream()
+//                  .filter(person -> person.age() >= 18)
+//                  .distinctBy(Person::lastName)
+//                  .collect(toSet());
+
+            record DistinctByLastName(Person person) {
+
+                @Override
+                public boolean equals(Object o) {
+                    return o instanceof DistinctByLastName other &&
+                           this.person().lastName().equals(other.person().lastName());
+                }
+
+                @Override
+                public int hashCode() {
+                    return Objects.hashCode(person().lastName());
+                }
+            }
+
+            System.out.println(people.stream()
+                                     .filter(person -> person.age() >= 18)
+                                     .map(DistinctByLastName::new)
+                                     .distinct()
+                                     .map(DistinctByLastName::person)
+                                     .collect(toSet()));
+
+            System.out.println(people.stream()
+                                     .filter(person -> person.age() >= 18)
+                                     .gather(distinctBy(Person::lastName))
+                                     .collect(toSet()));
+        }
+
+        static Gatherer<Person, Set<String>, Person> distinctBy(Function<Person, String> property) {
+            return Gatherer.ofSequential(HashSet::new,
+                                         (state, element, downstream) -> {
+                                             if (state.add(property.apply(element))) {
+                                                 return downstream.push(element);
+                                             } else {
+                                                 return true;
+                                             }
+                                         });
+        }
+    }
 
     // Flexible Constructor Bodies
     // https://openjdk.org/jeps/482
 
+    // Removes the constraint on constructors that the first thing must be
+    // a call to another constructor or to super.
+    // This allows validation of arguments to occur before the super constructor is invoked
+    // without having to create separate static methods to do the job.
+    // It also helps resolve a longstanding problem where constructors of base classes
+    // should not call methods that are overridable by derived classes.
+    static class FlexibleConstructors {
 
+        static class Employee {
+
+            private final int id;
+            private final String name;
+
+            Employee(int id, String name) {
+                // Some expensive set up, database stuff, whatever
+                this.id = id;
+                this.name = name;
+                validate();
+            }
+
+            protected void validate() {
+                if (id <= 0) throw new IllegalStateException("Employee ID must be >= 1");
+            }
+        }
+
+        static class Manager extends Employee {
+
+            private final Set<Employee> directReports;
+
+            Manager(int id, String name, Set<Employee> directReports) {
+                // Before
+//                super(id, name);
+//                this.directReports = Set.copyOf(directReports);
+
+                // After
+                this.directReports = Set.copyOf(directReports);
+                super(id, name);
+            }
+
+            @Override
+            protected void validate() {
+                super.validate();
+                if (directReports.isEmpty())
+                    throw new IllegalStateException("Must have at least one direct report");
+            }
+        }
+
+        public static void main(String[] args) {
+//            new Manager(1, "Jason", Set.of());
+            new Manager(2, "Michel", Set.of(new Employee(3, "Brendan")));
+        }
+    }
 
     // Markdown Documentation Comments
     // https://openjdk.org/jeps/467
@@ -82,7 +200,16 @@ public class JdkFuture {
     // Implicitly Declared Classes and Instance Main Methods
     // https://openjdk.org/jeps/477
 
-    // See HelloWorld.java
+// HelloWorld.java
+//    String greetingFor(String name) {
+//        return "Hello " + name;
+//    }
+//
+//    void main() {
+//        for (var name : List.of("Jason", "Fred", "World")) {
+//            println(greetingFor(name));
+//        }
+//    }
 
 
     // Module Import Declarations
