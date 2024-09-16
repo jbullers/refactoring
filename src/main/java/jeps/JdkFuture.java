@@ -194,22 +194,37 @@ public class JdkFuture {
 
     // If you've ever written Markdown and have also written JavaDoc that needs to include
     // lists or tables, you already know what's good about this :)
-    // IntelliJ doesn't support it yet, so check out the JEP
 
+    /**
+     * Comments <em>and</em> <strong>more</strong>
+     * <ul>
+     *     <li>list</li>
+     *     <li>of</li>
+     *     <li>stuff</li>
+     * </ul>
+     * <pre>{@code
+     * var x = List.of("a");
+     * }</pre>
+     * Create immutable singleton {@link List#of(Object) Lists} or {@link Set#of(Object) Sets}
+     */
+    static class OriginalDocs {}
+
+    /// Comments _and_ **more**
+    /// * list
+    /// * of
+    /// * stuff
+    ///
+    /// ```
+     /// var x = List.of("a");
+     /// ```
+    /// Create immutable singleton [Lists][List#of(Object)] or [Sets][Set#of(Object)]
+    ///
+    static class MarkdownDocs {}
 
     // Implicitly Declared Classes and Instance Main Methods
     // https://openjdk.org/jeps/477
 
-// HelloWorld.java
-//    String greetingFor(String name) {
-//        return "Hello " + name;
-//    }
-//
-//    void main() {
-//        for (var name : List.of("Jason", "Fred", "World")) {
-//            println(greetingFor(name));
-//        }
-//    }
+    // See HelloWorld.java
 
 
     // Module Import Declarations
